@@ -1,6 +1,7 @@
 package user
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/gorilla/mux"
@@ -8,11 +9,14 @@ import (
 	"github.com/pdhawan2001/Go-REST-API/utils"
 )
 
+// we don't have to put store as a pointer
+// because the interface already references the concrete implementation.
 type Handler struct {
+	store types.UserStore
 }
 
-func NewHandler() *Handler {
-	return &Handler{}
+func NewHandler(store types.UserStore) *Handler {
+	return &Handler{store: store}
 }
 
 func (h *Handler) RegisterRoutes(router *mux.Router) {
@@ -36,7 +40,25 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// check if the user exists
+	u, err : =h.store.GetUserByEmail(payload.Email)
+	if err != nil {
+		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("user with email %s already exists", payload.Email))
+		return
+	}
 
 	// if it doesn't create the new user
+	err := h.store.CreateUser(types.User{
+		FirstName: payload.FirstName,
+		LastName: payload.LastName,
+		Email: payload.Email,
+		Password: payload.Password,
+	})
+
+	if err != nil {
+		utils.WriteError(w, http.StatusInternalServerError, err)
+		return
+	}
+
+	utils.WriteJSON(w, http.StatusCreated, nil))
 
 }
