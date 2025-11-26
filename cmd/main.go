@@ -10,9 +10,11 @@ import (
 	"github.com/pdhawan2001/Go-REST-API/db"
 )
 
+// structure of a function in Go
 // func (receiver) MethodName(params) returnTypes
 
 func main() {
+	// connecting to db
 	db, err := db.NewMySQLStorage(mysql.Config{
 		User:                 config.Envs.DBUser,
 		Passwd:               config.Envs.DBPassword,
@@ -27,6 +29,7 @@ func main() {
 		log.Fatal(err)
 	}
 
+	// pinging to DB
 	initStorage(db)
 
 	server := api.NewAPIServer(":8080", db)

@@ -20,6 +20,7 @@ type Config struct {
 // Otherwise we have to write something like cfg := initConfig(); and then cfg.DBUser, this is a redundant way to access.
 var Envs = initConfig()
 
+// get env from .env, if doesn't exist use the below fallback values.
 func initConfig() Config {
 	godotenv.Load()
 	return Config{
