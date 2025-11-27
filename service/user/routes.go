@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/gorilla/mux"
+	"github.com/pdhawan2001/Go-REST-API/service/auth"
 	"github.com/pdhawan2001/Go-REST-API/types"
 	"github.com/pdhawan2001/Go-REST-API/utils"
 )
@@ -40,18 +41,28 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// check if the user exists
-	u, err : =h.store.GetUserByEmail(payload.Email)
+	// here we are are using dash (_) because we dont want to return the user, we just want to return the error here
+	// because the user does not exist
+	// go wants us to use every variable that's why we use something called as a dash (_) to not return that
+	// but just keep in mind that it exists there
+	_, err := h.store.GetUserByEmail(payload.Email)
 	if err != nil {
 		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("user with email %s already exists", payload.Email))
 		return
 	}
 
+	hashedPassword, err := auth.HashPassword(payload.Password)
+	if err != nil {
+		utils.WriteError(w, http.StatusInternalServerError, err)
+		return
+	}
+
 	// if it doesn't create the new user
-	err := h.store.CreateUser(types.User{
+	err = h.store.CreateUser(types.User{
 		FirstName: payload.FirstName,
-		LastName: payload.LastName,
-		Email: payload.Email,
-		Password: payload.Password,
+		LastName:  payload.LastName,
+		Email:     payload.Email,
+		Password:  hashedPassword,
 	})
 
 	if err != nil {
@@ -59,6 +70,6 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	utils.WriteJSON(w, http.StatusCreated, nil))
+	utils.WriteJSON(w, http.StatusCreated, nil)
 
 }

@@ -19,6 +19,10 @@ func NewStore(db *sql.DB) *Store {
 	return &Store{db: db}
 }
 
+// Here Store is the receiver type in all three go functions
+// So store is actually satisfying the User Interface
+// ✅ This is called implicit interface implementation in Go.
+
 func (s *Store) GetUserByEmail(email string) (*types.User, error) {
 	rows, err := s.db.Query("SELECT * FROM users WHERE email = ?", email)
 
@@ -75,7 +79,7 @@ func scanRowIntoUser(rows *sql.Rows) (*types.User, error) {
 	return user, nil
 }
 
-func (s *Store) GetUserById(int ID) (*types.User, error) {
+func (s *Store) GetUserByID(ID int) (*types.User, error) {
 	return nil, nil
 }
 
