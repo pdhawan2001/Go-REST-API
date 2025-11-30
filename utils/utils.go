@@ -4,9 +4,13 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+
+	"github.com/go-playground/validator/v10"
 )
 
 // the error returned in these functions will be used or returned, wherever they are called
+
+var Validate = validator.New()
 
 // this is taking the request as we are converting the data we are passing into the api to the payload
 func ParseJSON(r *http.Request, payload any) error {

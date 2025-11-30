@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/go-playground/validator/v10"
 	"github.com/gorilla/mux"
 	"github.com/pdhawan2001/Go-REST-API/service/auth"
 	"github.com/pdhawan2001/Go-REST-API/types"
@@ -35,9 +36,17 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 	var payload types.RegisterUserPayload // payload := types.RegisterUserPayload{} equivalent shorthand
 
 	// the body is being decoded into the payload in the ParseJSON function
-	if err := utils.ParseJSON(r, payload); err != nil {
+	if err := utils.ParseJSON(r, &payload); err != nil {
 		// StatusBadRequest because this is an User error
 		utils.WriteError(w, http.StatusBadRequest, err)
+		return
+	}
+
+	// validate the payload
+	if err := utils.Validate.Struct(payload); err != nil {
+		errors := err.(validator.ValidationErrors)
+		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("invalid payload %v", errors))
+		return
 	}
 
 	// check if the user exists
@@ -46,7 +55,7 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 	// go wants us to use every variable that's why we use something called as a dash (_) to not return that
 	// but just keep in mind that it exists there
 	_, err := h.store.GetUserByEmail(payload.Email)
-	if err != nil {
+	if err == nil {
 		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("user with email %s already exists", payload.Email))
 		return
 	}
