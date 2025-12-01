@@ -6,6 +6,7 @@ import (
 
 	"github.com/go-playground/validator/v10"
 	"github.com/gorilla/mux"
+	"github.com/pdhawan2001/Go-REST-API/config"
 	"github.com/pdhawan2001/Go-REST-API/service/auth"
 	"github.com/pdhawan2001/Go-REST-API/types"
 	"github.com/pdhawan2001/Go-REST-API/utils"
@@ -28,6 +29,44 @@ func (h *Handler) RegisterRoutes(router *mux.Router) {
 }
 
 func (h *Handler) handleLogin(w http.ResponseWriter, r *http.Request) {
+	// get json payload
+	var payload types.LoginUserPayload // payload := types.RegisterUserPayload{} equivalent shorthand
+
+	// the body is being decoded into the payload in the ParseJSON function
+	if err := utils.ParseJSON(r, &payload); err != nil {
+		// StatusBadRequest because this is an User error
+		utils.WriteError(w, http.StatusBadRequest, err)
+		return
+	}
+
+	// validate the payload
+	if err := utils.Validate.Struct(payload); err != nil {
+		errors := err.(validator.ValidationErrors)
+		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("invalid payload %v", errors))
+		return
+	}
+
+	// find user by id or email
+	u, err := h.store.GetUserByEmail(payload.Email)
+	if err != nil {
+		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("User not found, invalid email or password!!"))
+		return
+	}
+
+	// passwords match or not
+	if !auth.ComparePasswords(u.Password, []byte(payload.Password)) {
+		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("User not found, invalid email or password!!"))
+		return
+	}
+
+	secret := []byte(config.Envs.JWTSecret)
+	token, err := auth.CreateJWT(secret, u.ID)
+	if err != nil {
+		utils.WriteError(w, http.StatusInternalServerError, err)
+		return
+	}
+
+	utils.WriteJSON(w, http.StatusOK, map[string]string{"token": token})
 
 }
 
