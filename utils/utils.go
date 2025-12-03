@@ -35,3 +35,18 @@ func WriteError(w http.ResponseWriter, status int, err error) {
 	// map below is a key-value store, which will put the key and values in the error
 	WriteJSON(w, status, map[string]string{"error": err.Error()})
 }
+
+func GetTokenFromRequest(r *http.Request) string {
+	tokenAuth := r.Header.Get("Authorization")
+	tokenQuery := r.URL.Query().Get("token")
+
+	if tokenAuth != "" {
+		return tokenAuth
+	}
+
+	if tokenQuery != "" {
+		return tokenQuery
+	}
+
+	return ""
+}
